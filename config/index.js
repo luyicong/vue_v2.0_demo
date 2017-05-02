@@ -5,7 +5,7 @@ module.exports = {
 	
   //网站模块名，例如 http://192.168.0.216:8089/module/app/initlayer.html 中的 
   //【views】，默认为views，修改这里的配置的同时，也要同时重命名/src/views的这个文件夹名称  
-  moduleName:'views', 
+  moduleName:'/', 
   
   build: {
     env: require('./prod.env'),
