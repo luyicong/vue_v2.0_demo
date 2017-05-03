@@ -4,7 +4,7 @@ var webpack = require('webpack')
 var config = require('../config')
 
 var glob = require('glob');
-var entries =  utils.getMultiEntry('./src/'+config.moduleName+'/**/**/*.js'); // 获得入口js文件
+var entries =  utils.getEntries('./src/views/**/*.js'); // 获得入口js文件
 var chunks = Object.keys(entries);
 
 console.log(chunks)
@@ -70,6 +70,10 @@ var webpackConfig = {
     ]
   },
   plugins: [
+       new webpack.ProvidePlugin({
+          $: "jquery",
+          jQuery: "jquery"
+      })
 	/*
     // 提取公共模块
     new webpack.optimize.CommonsChunkPlugin({
@@ -78,6 +82,7 @@ var webpackConfig = {
       minChunks: 4 || chunks.length //公共模块被使用的最小次数。比如配置为3，也就是同一个模块只有被3个以外的页面同时引用时才会被提取出来作为common chunks。
 
     }),*/
+
    
   ]
 }

@@ -9,7 +9,7 @@ var HtmlWebpackPlugin = require('html-webpack-plugin')
 var ExtractTextPlugin = require('extract-text-webpack-plugin')
 var OptimizeCSSPlugin = require('optimize-css-assets-webpack-plugin')
 
-var entries =  utils.getMultiEntry('./src/'+config.moduleName+'/**/**/*.js'); // 获得入口js文件
+var entries =  utils.getEntries('./src/views/**/*.js'); // 获得入口js文件
 var chunks = Object.keys(entries);
 
 
@@ -24,11 +24,15 @@ var webpackConfig = merge(baseWebpackConfig, {
       extract: true
     })
   },
-  //devtool: config.build.productionSourceMap ? '#source-map' : false,
+  // devtool: config.build.productionSourceMap ? '#source-map' : false,
   output: {
     path: config.build.assetsRoot,
-    filename: utils.assetsPath('js/[name].js'),
-    chunkFilename: utils.assetsPath('js/[id].js')
+    filename: utils.assetsPath('js/[name].[chunkhash].js'),
+    chunkFilename: utils.assetsPath('js/[id].[chunkhash].js')
+  },
+    /*配置jquery全部变量*/
+  externals:{
+    $:'$'
   },
   plugins: [
     // http://vuejs.github.io/vue-loader/en/workflow/production.html
@@ -43,33 +47,13 @@ var webpackConfig = merge(baseWebpackConfig, {
     }),
     // extract css into its own file
     new ExtractTextPlugin({
-      filename: utils.assetsPath('css/[name].css')
+      filename: utils.assetsPath('css/[name].[chunkhash].css')
     }),
-    // Compress extracted CSS. We are using this plugin so that possible
     // duplicated CSS from different components can be deduped.
     new OptimizeCSSPlugin(),
-    // generate dist index.html with correct asset hash for caching.
-    // you can customize output by editing /index.html
-    // see https://github.com/ampedandwired/html-webpack-plugin
-   /* new HtmlWebpackPlugin({
-      filename: process.env.NODE_ENV === 'testing'
-        ? 'index.html'
-        : config.build.index,
-      template: 'index.html',
-      inject: true,
-      minify: {
-        removeComments: true,
-        collapseWhitespace: true,
-        removeAttributeQuotes: true
-        // more options:
-        // https://github.com/kangax/html-minifier#options-quick-reference
-      },
-      // necessary to consistently work with multiple chunks via CommonsChunkPlugin
-      chunksSortMode: 'dependency'
-    }),*/
-    // split vendor js into its own file
-    /*new webpack.optimize.CommonsChunkPlugin({
-      name: 'vendor',
+    // 公共模块的提取
+    new webpack.optimize.CommonsChunkPlugin({
+      name: 'vendor', // 生成文件的名字
       minChunks: function (module, count) {
         // any required modules inside node_modules are extracted to vendor
         return (
@@ -80,26 +64,12 @@ var webpackConfig = merge(baseWebpackConfig, {
           ) === 0
         )
       }
-    }),*/
-    // extract webpack runtime and module manifest to its own file in order to
+    }),
     // prevent vendor hash from being updated whenever app bundle is updated
     new webpack.optimize.CommonsChunkPlugin({
-      name: 'vendor',
-      chunks: chunks,
-	  	minChunks: 4 || chunks.length 
-    }),
-	/*
-    // copy custom static assets
-    new CopyWebpackPlugin([
-      {
-        from: path.resolve(__dirname, '../static'),
-        to: config.build.assetsSubDirectory,
-        ignore: ['.*']
-      }
-    ])*/
-
-   
-
+      name: 'manifest',
+      chunks: ['vendor']
+    })
   ]
 })
 
@@ -127,20 +97,25 @@ if (config.build.bundleAnalyzerReport) {
 }
 
 //构建生成多页面的HtmlWebpackPlugin配置，主要是循环生成
-var pages =  utils.getMultiEntry('./src/'+config.moduleName+'/**/**/*.html');
-for (var pathname in pages) {
-
+var pages =  utils.getEntries('./src/views/**/*.html');
+ for(var page in pages) {
+  // 配置生成的html文件，定义路径等
   var conf = {
-    filename: pathname + '.html',
-    template: pages[pathname], // 模板路径
-    chunks: ['vendor',pathname], // 每个html引用的js模块
-    inject: true,              // js插入位置
-	hash:true
-  };
- 
+    filename: page + '.html',
+    template: pages[page], //模板路径
+    inject: true,
+    // excludeChunks 允许跳过某些chunks, 而chunks告诉插件要引用entry里面的哪几个入口
+    // 如何更好的理解这块呢？举个例子：比如本demo中包含两个模块（index和about），最好的当然是各个模块引入自己所需的js，
+    // 而不是每个页面都引入所有的js，你可以把下面这个excludeChunks去掉，然后npm run build，然后看编译出来的index.html和about.html就知道了
+    // filter：将数据过滤，然后返回符合要求的数据，Object.keys是获取JSON对象中的每个key
+    excludeChunks: Object.keys(pages).filter(item => {
+      return (item != page)
+    }),
+    minify:{    //压缩HTML文件                 
+          //removeComments:true,    //移除HTML中的注释                 
+          collapseWhitespace:true    //删除空白符与换行符            
+      }
+  }
   webpackConfig.plugins.push(new HtmlWebpackPlugin(conf));
 }
-
-
-
 module.exports = webpackConfig
