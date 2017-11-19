@@ -160,4 +160,4 @@ Lib.C.appname;  #蓝橙绿
 
 生命在于折腾，理想还是要有的，万一实现了呢。
 
-个人博客：http://www.congitlive.cn
+个人博客：http://blog.yoho167.com
